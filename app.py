@@ -57,7 +57,7 @@ st.markdown("""
 def card(titulo: str, valor: str, sub: str | None = None, color: str = "gris",
          grande: bool = False, pendiente: bool = False) -> None:
     clases = "vg-card" + (" big" if grande else "") + (" pend" if pendiente else "")
-    sub_html = f'<div class="s">{html.escape(sub)}</div>' if sub else ""
+    sub_html = f'<div class="s">{html.escape(sub).replace(chr(10), "<br>")}</div>' if sub else ""
     st.markdown(
         f'<div class="{clases}" style="background:{COLORES[color]}">'
         f'<div class="t">{html.escape(titulo)}</div><div class="v">{html.escape(valor)}</div>{sub_html}</div>',
@@ -157,8 +157,10 @@ with der:
             por_definir("# Procesos Analizados", "salmon")
         with p2:
             por_definir("FTE Impactos para Calidad", "salmon")
-        sub = (f"{kpis.fmt_num(r['reduccion_lead'], 0)} {UNIDAD_LEAD_TIME} reducidas"
-                if r["reduccion_lead"] is not None else None)
+        sub = (f"{kpis.fmt_num(r['reduccion_lead'], 0)} {UNIDAD_LEAD_TIME} reducidas\n"
+               f"Inicial: {kpis.fmt_num(r['lead_ini'], 0)} {UNIDAD_LEAD_TIME} · "
+               f"Actual: {kpis.fmt_num(r['lead_post'], 0)} {UNIDAD_LEAD_TIME}"
+               if r["reduccion_lead"] is not None else None)
         card("Reducción Lead Time", kpis.fmt_pct(r["pct_reduccion_lead"]), sub, color="salmon")
 
 # ---------------------------------------------------------------- detalle
