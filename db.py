@@ -63,6 +63,7 @@ VG_PROYECTO_NUM = {
     "Total FTE Potencial": "fte_potencial_total", "Costo Benchmark $": "costo_benchmark",
     "Valorización As Is ($)": "valor_as_is_usd", "Valorización To Be ($)": "valor_to_be_usd",
     "Valorización Post-Intervencion ($)": "valor_real_post_usd",
+    "Entregables Comprometidos": "ent_comprometidos", "Entregables Cumplidos": "ent_cumplidos",
     "Tiempo de Ciclo Inicial": "vsm_ciclo_ini", "Lead Time Inicial": "vsm_lead_ini",
     "Espera Inicial": "vsm_espera_ini", "Esfuerzo Inicial": "vsm_esfuerzo_ini",
     "Tiempo de Ciclo post-intervencion": "vsm_ciclo_post", "Lead Time post-intervencion": "vsm_lead_post",
