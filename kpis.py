@@ -62,14 +62,24 @@ def calcular(kpi: pd.DataFrame, gerencias: pd.DataFrame) -> dict:
     """Todos los indicadores del dashboard para el conjunto ya filtrado."""
     r: dict = {"proyectos": int(len(kpi))}
 
-    # --- Valor en USD (solo proyectos con As Is y To Be)
+    # --- Valor en USD
+    #     potencial = As Is − To Be ; real = As Is − Real post-intervención
     as_is, to_be = _num(kpi, "valor_as_is_usd"), _num(kpi, "valor_to_be_usd")
+    real_post = _num(kpi, "valor_real_post_usd")
     m = as_is.notna() & to_be.notna()
-    r["usd_as_is"] = _suma(as_is[m])
-    r["usd_to_be"] = _suma(to_be[m])
-    r["ahorro_usd"] = _suma((as_is - to_be)[m])
-    r["pct_real_vs_potencial"] = ratio(r["usd_to_be"], r["usd_as_is"])
+    r["ahorro_usd"] = _suma((as_is - to_be)[m])                 # tarjeta AHORRO POTENCIAL
     r["proyectos_con_valorizacion"] = int(m.sum())
+    # % Real vs Potencial: solo proyectos que ya tienen los 3 valores
+    mr = m & real_post.notna()
+    r["ahorro_potencial_cerrados"] = _suma((as_is - to_be)[mr])
+    r["ahorro_real"] = _suma((as_is - real_post)[mr])
+    r["pct_real_vs_potencial"] = ratio(r["ahorro_real"], r["ahorro_potencial_cerrados"])
+    r["proyectos_con_real"] = int(mr.sum())
+
+    # --- Tiempo de diagnóstico (días calendario, solo diagnósticos cerrados)
+    dias = _num(kpi, "diag_dias").dropna()
+    r["diag_promedio_dias"] = float(dias.mean()) if not dias.empty else None
+    r["diag_cerrados"] = int(len(dias))
 
     # --- FTE
     r["fte_potencial"] = _suma(_num(kpi, "fte_potencial_total"))
@@ -90,7 +100,6 @@ def calcular(kpi: pd.DataFrame, gerencias: pd.DataFrame) -> dict:
         r["por_gerencia"] = {g: int(cuenta[g]) for g in orden}
 
     # --- Ejecución
-    r["pct_diag_timebox"] = ratio(_num(kpi, "diag_en_timebox").sum(), _num(kpi, "diag_total").sum())
     r["pct_entregables_en_fecha"] = ratio(_num(kpi, "entregables_en_fecha").sum(),
                                           _num(kpi, "entregables_comprometidos").sum())
 

@@ -106,9 +106,13 @@ izq, der = st.columns([1.25, 3.75], gap="medium")
 
 with izq:
     card("% [Monto Real vs. Potencial]", kpis.fmt_pct(r["pct_real_vs_potencial"]),
-         f"To Be {kpis.fmt_usd(r['usd_to_be'])} / As Is {kpis.fmt_usd(r['usd_as_is'])}",
+         (f"Real {kpis.fmt_usd(r['ahorro_real'])} de {kpis.fmt_usd(r['ahorro_potencial_cerrados'])} potencial "
+          f"({r['proyectos_con_real']} proyecto(s) con valorización real)")
+         if r["proyectos_con_real"] else "Aún sin valorización real post-intervención",
          color="verde_fuerte", grande=True)
-    card("% diagnósticos dentro del timebox", kpis.fmt_pct(r["pct_diag_timebox"]), color="verde")
+    card("Tiempo promedio de diagnóstico",
+         "Sin datos" if r["diag_promedio_dias"] is None else f"{r['diag_promedio_dias']:.0f} días",
+         f"Días calendario · {r['diag_cerrados']} diagnóstico(s) cerrado(s)", color="verde")
     card("% de entregables cumplidos a la fecha", kpis.fmt_pct(r["pct_entregables_en_fecha"]), color="verde")
     por_definir("% WIP en prioridades vigentes", "azul")
     dias = fuente.meta(datos["umbral"], "diag_timebox_dias")
@@ -160,20 +164,22 @@ with der:
 with st.expander("Detalle por proyecto"):
     cols = {
         "proyecto": "Proyecto", "tipo_proyecto": "Tipo", "anio": "Año", "gerencia_central": "Gerencia",
-        "pct_entregables_en_fecha": "% entregables", "pct_diag_timebox": "% diag. timebox",
-        "ahorro_potencial_usd": "Ahorro USD", "pct_usd_real_vs_pot": "% Real vs Pot.",
+        "pct_entregables_en_fecha": "% entregables", "diag_dias": "Días diagnóstico",
+        "ahorro_potencial_usd": "Ahorro potencial USD", "ahorro_real_usd": "Ahorro real USD",
+        "pct_real_vs_potencial": "% Real vs Pot.",
         "pct_reduccion_lead_time": "% Red. Lead Time", "bc_aprobado": "¿BC Aprobado?",
     }
     tabla = kpi_df[[c for c in cols if c in kpi_df.columns]].rename(columns=cols)
-    for c in ("% entregables", "% diag. timebox", "% Real vs Pot.", "% Red. Lead Time"):
+    pcts = ("% entregables", "% Real vs Pot.", "% Red. Lead Time")
+    for c in pcts:
         if c in tabla:
             tabla[c] = pd.to_numeric(tabla[c], errors="coerce") * 100
     st.dataframe(
         tabla, hide_index=True, use_container_width=True,
-        column_config={c: st.column_config.NumberColumn(format="%.1f %%")
-                       for c in ("% entregables", "% diag. timebox", "% Real vs Pot.", "% Red. Lead Time")}
-        | {"Ahorro USD": st.column_config.NumberColumn(format="$ %.0f"),
-           "Año": st.column_config.NumberColumn(format="%d")})
+        column_config={c: st.column_config.NumberColumn(format="%.1f %%") for c in pcts}
+        | {c: st.column_config.NumberColumn(format="$ %.0f") for c in ("Ahorro potencial USD", "Ahorro real USD")}
+        | {"Año": st.column_config.NumberColumn(format="%d"),
+           "Días diagnóstico": st.column_config.NumberColumn(format="%d")})
 
 corrida = datos["corrida"]
 st.caption("Datos al corte: " + (corrida.strftime("%d/%m/%Y %H:%M") if corrida else "sin registro")
