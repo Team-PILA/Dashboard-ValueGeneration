@@ -96,7 +96,7 @@ def calcular(kpi: pd.DataFrame, gerencias: pd.DataFrame) -> dict:
         cuenta = gerencias["gerencia"].value_counts()
         orden = [g for g in ORDEN_GERENCIAS if g in cuenta.index] + sorted(
             g for g in cuenta.index if g not in ORDEN_GERENCIAS)
-        r["intervenciones"] = int(cuenta.sum())
+        r["intervenciones"] = int(len(cuenta))
         r["por_gerencia"] = {g: int(cuenta[g]) for g in orden}
 
     # --- Ejecución
