@@ -157,8 +157,8 @@ with der:
             por_definir("# Procesos Analizados", "salmon")
         with p2:
             por_definir("FTE Impactos para Calidad", "salmon")
-        sub = (f"De {kpis.fmt_num(r['lead_ini'], 0)} a {kpis.fmt_num(r['lead_post'], 0)} {UNIDAD_LEAD_TIME} "
-               f"· {r['proyectos_con_vsm']} proyecto(s) con VSM completo") if r["lead_ini"] is not None else None
+        sub = (f"{kpis.fmt_num(r['reduccion_lead'], 0)} {UNIDAD_LEAD_TIME} reducidas"
+                if r["reduccion_lead"] is not None else None)
         card("Reducción Lead Time", kpis.fmt_pct(r["pct_reduccion_lead"]), sub, color="salmon")
 
 # ---------------------------------------------------------------- detalle
