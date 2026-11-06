@@ -97,8 +97,25 @@ def calcular(kpi: pd.DataFrame, gerencias: pd.DataFrame) -> dict:
         orden = [g for g in ORDEN_GERENCIAS if g in cuenta.index] + sorted(
             g for g in cuenta.index if g not in ORDEN_GERENCIAS)
         r["intervenciones"] = int(len(cuenta))
-        print("Cuenta por gerencia:", len(cuenta))
         r["por_gerencia"] = {g: int(cuenta[g]) for g in orden}
+
+        print("========== DEBUG GERENCIAS ==========", flush=True)
+
+        print("Cantidad de registros:", len(gerencias), flush=True)
+
+        print("Datos de gerencias:", flush=True)
+        print(gerencias.to_string(), flush=True)
+
+        if gerencias.empty:
+            r["intervenciones"] = 0
+            r["por_gerencia"] = {}
+        else:
+            cuenta = gerencias["gerencia"].value_counts()
+
+            print("Cuenta por gerencia:", len(cuenta), flush=True)
+            print("Detalle:", cuenta.to_dict(), flush=True)
+
+            # Resto de tu código
 
     # --- Ejecución
     r["pct_entregables_en_fecha"] = ratio(_num(kpi, "entregables_en_fecha").sum(),
