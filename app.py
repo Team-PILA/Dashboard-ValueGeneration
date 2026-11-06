@@ -31,6 +31,7 @@ def _secreto(nombre: str, defecto: str = "") -> str:
 
 
 ESQUEMA = _secreto("ESQUEMA", "value_generation")
+UNIDAD_LEAD_TIME = "horas"   # unidad en que se registran los Lead Time del VSM en Notion
 
 COLORES = {  # paleta del whiteboard
     "verde_fuerte": "#9FE2BF", "verde": "#CDE8A8", "azul": "#A9B8F8",
@@ -156,8 +157,8 @@ with der:
             por_definir("# Procesos Analizados", "salmon")
         with p2:
             por_definir("FTE Impactos para Calidad", "salmon")
-        sub = (f"{kpis.fmt_num(r['lead_ini'], 0)} → {kpis.fmt_num(r['lead_post'], 0)} "
-               f"({r['proyectos_con_vsm']} proyecto(s) con VSM)") if r["lead_ini"] is not None else None
+        sub = (f"De {kpis.fmt_num(r['lead_ini'], 0)} a {kpis.fmt_num(r['lead_post'], 0)} {UNIDAD_LEAD_TIME} "
+               f"· {r['proyectos_con_vsm']} proyecto(s) con VSM completo") if r["lead_ini"] is not None else None
         card("Reducción Lead Time", kpis.fmt_pct(r["pct_reduccion_lead"]), sub, color="salmon")
 
 # ---------------------------------------------------------------- detalle
