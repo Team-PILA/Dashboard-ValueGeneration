@@ -131,7 +131,8 @@ with der:
         card("FTE", kpis.fmt_num(r["fte_potencial"]), f"Real optimizado: {kpis.fmt_num(r['fte_real'])}",
              color="morado")
     with c:
-        card("# Total de Intervenciones", str(r["intervenciones"]), f"{r['proyectos']} proyecto(s)",
+        card("# Total de Intervenciones", str(r["intervenciones"]),
+             f"{r['intervenciones_total']} intervenciones en {r['proyectos']} proyecto(s)",
              color="morado")
         detalle = "  |  ".join(f"{g}: {n}" for g, n in r["por_gerencia"].items()) or "Sin gerencias"
         st.markdown(f'<div class="vg-ger">{html.escape(detalle)}</div>', unsafe_allow_html=True)
@@ -154,7 +155,9 @@ with der:
                     '<p class="vg-sec-sub">[Calidad vs. Velocidad]</p>', unsafe_allow_html=True)
         p1, p2 = st.columns(2)
         with p1:
-            por_definir("# Procesos Analizados", "salmon")
+            card("# Procesos Analizados",
+                 "Sin datos" if r["procesos_analizados"] is None else f"{r['procesos_analizados']:.0f}",
+                 f"en {r['proyectos_con_procesos']} proyecto(s)", color="salmon")
         with p2:
             por_definir("FTE Impactos para Calidad", "salmon")
         sub = (f"{kpis.fmt_num(r['reduccion_lead'], 0)} {UNIDAD_LEAD_TIME} reducidas\n"
@@ -178,7 +181,7 @@ with st.expander("Detalle por proyecto"):
         if c in tabla:
             tabla[c] = pd.to_numeric(tabla[c], errors="coerce") * 100
     st.dataframe(
-        tabla, hide_index=True, use_container_width=True,
+        tabla, hide_index=True, width="stretch",
         column_config={c: st.column_config.NumberColumn(format="%.1f %%") for c in pcts}
         | {c: st.column_config.NumberColumn(format="$ %.0f") for c in ("Ahorro potencial USD", "Ahorro real USD")}
         | {"Año": st.column_config.NumberColumn(format="%d"),

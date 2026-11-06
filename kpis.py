@@ -87,16 +87,20 @@ def calcular(kpi: pd.DataFrame, gerencias: pd.DataFrame) -> dict:
     r["fte_diseno_org"] = _suma(_num(kpi, "fte_diseno_org"))
     r["fte_make_or_buy"] = _suma(_num(kpi, "fte_make_or_buy"))
     r["fte_optim_procesos"] = _suma(_num(kpi, "fte_optim_procesos"))
+    r["procesos_analizados"] = _suma(_num(kpi, "procesos_analizados"))
+    r["proyectos_con_procesos"] = int(_num(kpi, "procesos_analizados").notna().sum())
 
     # --- Intervenciones por gerencia central
     if gerencias.empty:
         r["intervenciones"] = 0
+        r["intervenciones_total"] = 0
         r["por_gerencia"] = {}
     else:
         cuenta = gerencias["gerencia"].value_counts()
         orden = [g for g in ORDEN_GERENCIAS if g in cuenta.index] + sorted(
             g for g in cuenta.index if g not in ORDEN_GERENCIAS)
-        r["intervenciones"] = int(len(cuenta))
+        r["intervenciones"] = int(len(cuenta))          # GCs distintas impactadas (sin repetir)
+        r["intervenciones_total"] = int(cuenta.sum())   # pares proyecto-GC (una GC por proyecto)
         r["por_gerencia"] = {g: int(cuenta[g]) for g in orden}
 
     # --- Ejecución

@@ -2,9 +2,9 @@
 -- Value Generation · DEMO (Supabase). Datos ficticios para probar el dashboard
 -- sin tocar Notion ni las tablas reales. El ETL nunca escribe en "vg_demo",
 -- así que no importa la hora ni si alguien corre el workflow a mano.
--- Requiere 01, 02 y 05 ya ejecutados. Se puede ejecutar varias veces
+-- Requiere 01, 02 y 06 ya ejecutados. Se puede ejecutar varias veces
 -- (borra y recarga los datos demo). Para eliminarlo todo: drop schema vg_demo cascade;
--- Las vistas son copia exacta de las de 05, apuntando a las tablas demo.
+-- Las vistas son copia exacta de las de 06, apuntando a las tablas demo.
 -- =====================================================================
 create schema if not exists vg_demo;
 
@@ -14,6 +14,7 @@ create table if not exists vg_demo.actividad (like proyectos.actividad including
 alter table vg_demo.proyecto add column if not exists valor_real_post_usd numeric(14,2);
 alter table vg_demo.proyecto add column if not exists ent_comprometidos numeric(10,0);
 alter table vg_demo.proyecto add column if not exists ent_cumplidos numeric(10,0);
+alter table vg_demo.proyecto add column if not exists procesos_analizados numeric(10,0);
 
 -- 2. Datos ficticios
 truncate vg_demo.proyecto, vg_demo.actividad;
@@ -77,7 +78,11 @@ from (
 ) x
 where x.proyecto = p.nombre;
 
--- 3. Vistas (copia de 05 sobre las tablas demo)
+-- # Procesos Analizados (demo-5 sin dato: no suma)
+update vg_demo.proyecto set procesos_analizados = case proyecto_id
+  when 'demo-1' then 3 when 'demo-2' then 2 when 'demo-3' then 1 when 'demo-4' then 2 when 'demo-6' then 1 end;
+
+-- 3. Vistas (copia de 06 sobre las tablas demo)
 drop view if exists vg_demo.v_lead_time_anio;
 drop view if exists vg_demo.v_bc_anio;
 drop view if exists vg_demo.v_intervencion_gerencia;
@@ -91,7 +96,7 @@ select p.proyecto_id, p.nombre as proyecto, p.tipo_proyecto, p.status,
        p.fte_potencial_total, p.fte_real_optimizado, p.fte_diseno_org,
        p.fte_make_or_buy, p.fte_optim_procesos, p.costo_benchmark,
        p.valor_as_is_usd, p.valor_to_be_usd, p.valor_real_post_usd,
-       p.ent_comprometidos, p.ent_cumplidos,
+       p.ent_comprometidos, p.ent_cumplidos, p.procesos_analizados,
        p.vsm_ciclo_ini,  p.vsm_lead_ini,  p.vsm_espera_ini,  p.vsm_esfuerzo_ini,
        p.vsm_ciclo_post, p.vsm_lead_post, p.vsm_espera_post, p.vsm_esfuerzo_post
 from vg_demo.proyecto p

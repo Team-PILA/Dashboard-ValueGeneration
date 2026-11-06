@@ -10,13 +10,13 @@ import kpis  # noqa: E402
 def _kpi():
     return pd.DataFrame([
         # proyecto con todo
-        dict(proyecto="A", anio=2025, valor_as_is_usd=100.0, valor_to_be_usd=60.0, valor_real_post_usd=70.0, diag_dias=12,
+        dict(proyecto="A", anio=2025, valor_as_is_usd=100.0, valor_to_be_usd=60.0, valor_real_post_usd=70.0, diag_dias=12, procesos_analizados=3,
              fte_potencial_total=3.0, fte_real_optimizado=2.0, fte_diseno_org=1.0,
              diag_total=3, diag_en_timebox=2, entregables_comprometidos=4, entregables_en_fecha=3,
              bc_presentado=True, bc_ok=True, costo_benchmark=50.0, costo_evitado_usd=20.0,
              vsm_lead_ini=100.0, vsm_lead_post=50.0, vsm_esfuerzo_ini=20.0, vsm_esfuerzo_post=20.0),
         # sin To Be ni lead post: no debe entrar a esos cocientes
-        dict(proyecto="B", anio=2026, valor_as_is_usd=900.0, valor_to_be_usd=None, valor_real_post_usd=None, diag_dias=None,
+        dict(proyecto="B", anio=2026, valor_as_is_usd=900.0, valor_to_be_usd=None, valor_real_post_usd=None, diag_dias=None, procesos_analizados=None,
              fte_potencial_total=1.0, fte_real_optimizado=None, fte_diseno_org=None,
              diag_total=0, diag_en_timebox=0, entregables_comprometidos=0, entregables_en_fecha=0,
              bc_presentado=False, bc_ok=False, costo_benchmark=30.0, costo_evitado_usd=None,
@@ -37,6 +37,7 @@ def test_totales_solo_con_ambos_datos():
     assert abs(r["pct_real_vs_potencial"] - 0.75) < 1e-9
     assert r["proyectos_con_real"] == 1
     assert r["diag_promedio_dias"] == 12 and r["diag_cerrados"] == 1
+    assert r["procesos_analizados"] == 3 and r["proyectos_con_procesos"] == 1
     assert r["lead_ini"] == 100 and r["lead_post"] == 50
     assert abs(r["pct_reduccion_lead"] - 0.5) < 1e-9
     assert r["proyectos_con_vsm"] == 1
@@ -52,7 +53,8 @@ def test_ratios_suma_sobre_suma():
 
 def test_intervenciones_y_orden_gerencias():
     r = kpis.calcular(_kpi(), _ger())
-    assert r["intervenciones"] == 3
+    assert r["intervenciones"] == 2          # GCC y GCO, sin contar GCC dos veces
+    assert r["intervenciones_total"] == 3
     assert list(r["por_gerencia"]) == ["GCO", "GCC"]
     assert r["por_gerencia"]["GCC"] == 2
 
