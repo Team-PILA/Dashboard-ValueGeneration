@@ -50,7 +50,6 @@ st.markdown("""
 .vg-sec-sub{font-size:.75rem;text-align:center;opacity:.7;margin-bottom:10px}
 .vg-ger{font-size:.95rem;font-weight:600;text-align:center;padding:8px;border-radius:8px;
         border:1px solid rgba(0,0,0,.12);background:#F5EEFA;color:#1d1d1f;margin-bottom:12px}
-.st-key-caja_azul{background:#9DC3E6;border-radius:10px;padding:14px;color:#1d1d1f}
 .vg-nota{font-size:.72rem;text-align:center;opacity:.75;margin:-6px 0 10px}
 </style>""", unsafe_allow_html=True)
 
@@ -164,7 +163,7 @@ with s2, st.container(border=True):
     kpi_df = kpi_df.assign(
         _costo_evitado=pd.to_numeric(kpi_df.get("costo_benchmark"), errors="coerce")
         - pd.to_numeric(kpi_df.get("costo_evitado_usd"), errors="coerce"))
-    tabla({"proyecto": "Proyecto", "alcance": "Servicio / Alcance",
+    tabla({"proyecto": "Proyecto", "alcance_e2e": "Alcance E2E del proyecto",
            "costo_evitado_usd": "Costo proyecto PI", "costo_benchmark": "Costo serv. con 3ro",
            "_costo_evitado": "Costo evitado"},
           {c: "$ %.0f" for c in ("Costo proyecto PI", "Costo serv. con 3ro", "Costo evitado")})
@@ -182,7 +181,7 @@ with s3, st.container(border=True):
              f"{kpis.fmt_num(r['impacto_hrs_potencial'], 0)} hrs/mes" if r["impacto_hrs_potencial"] is not None
              else None, color="salmon")
     st.markdown(f'<p class="vg-nota">1 FTE = {kpis.HORAS_FTE_MES} horas mensuales</p>', unsafe_allow_html=True)
-    tabla({"proyecto": "Proyecto", "alcance": "Alcance de análisis",
+    tabla({"proyecto": "Proyecto", "servicio_requerido": "Servicio Requerido",
            "vsm_lead_ini": "Lead Time As Is (h)", "vsm_lead_post": "Lead Time To Be (h)",
            "impacto_hrs_potencial": "Impacto Potencial (h)", "impacto_hrs_real": "Impacto Real (h)"},
           {c: "%.0f" for c in ("Lead Time As Is (h)", "Lead Time To Be (h)",
