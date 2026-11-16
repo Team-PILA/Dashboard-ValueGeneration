@@ -132,7 +132,8 @@ with s1, st.container(border=True, key="sec_org"):
 with s2, st.container(border=True, key="sec_inh"):
     html_(ui.seccion("Inhousing: Impacto en Gasto OPEX", "[Servicio Tercero vs. PI]", "intercambio", "azul"))
     html_(ui.metrica("Costo Evitado ante consultoras [USD]", kpis.fmt_usd(r["costo_evitado"]),
-                     f"Consultora {kpis.fmt_usd(r['costo_benchmark'])} − Proyecto PI {kpis.fmt_usd(r['costo_real_pi'])}",
+                     (f"Consultora {kpis.fmt_usd(r['costo_benchmark'])} − Proyecto PI {kpis.fmt_usd(r['costo_real_pi'])}"
+                      if r["costo_evitado"] is not None else "Falta cargar horas reales en las actividades"),
                      "billete", "azul"))
     _pi = pd.to_numeric(kpi_df.get("costo_evitado_usd"), errors="coerce")
     kpi_df = kpi_df.assign(   # sin horas cargadas (costo PI = 0) no hay costo evitado que mostrar
