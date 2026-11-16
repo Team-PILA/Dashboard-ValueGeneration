@@ -85,6 +85,14 @@ CSS = f"""
 .vg-tile .v{{font-size:1.45rem;font-weight:800;line-height:1.15}}
 .vg-tile .s{{font-size:.72rem;color:{PLOMO}}}
 
+.vg-diag{{border-radius:12px;padding:12px 18px;background:{PLOMO_CLARO};border:1px solid {BORDE};
+           display:flex;align-items:center;gap:16px;margin-bottom:14px;color:{TINTA};min-height:74px}}
+.vg-diag .ic{{color:{AZUL};flex:0 0 auto}}
+.vg-diag .t{{font-size:.82rem;font-weight:600;color:{PLOMO_OSC}}}
+.vg-diag .v{{font-size:2rem;font-weight:800;line-height:1.1}}
+.vg-diag .s{{font-size:.72rem;color:{PLOMO}}}
+.vg-diag .sep{{width:1px;align-self:stretch;background:{BORDE}}}
+.vg-diag .v2{{font-size:1.45rem;font-weight:800;color:{AZUL}}}
 .vg-ger{{border-radius:12px;padding:12px 16px;background:#fff;border:1px solid {BORDE};
          display:flex;gap:12px;align-items:center;margin-bottom:14px;color:{TINTA};min-height:74px}}
 .vg-ger .ic{{color:{MORADO};flex:0 0 auto}}
@@ -132,6 +140,16 @@ def tile(titulo: str, valor: str, sub: str | None, ic: str) -> str:
     sub_h = f'<div class="s">{_e(sub)}</div>' if sub else ""
     return (f'<div class="vg-tile"><div class="ic">{icono(ic, 30)}</div>'
             f'<div><div class="t">{_e(titulo)}</div><div class="v">{_e(valor)}</div>{sub_h}</div></div>')
+
+
+def diagnostico(dias: str, cerrados: int, prometidos: int) -> str:
+    """Tiempo promedio de diagnósticos (grande) y, a su derecha, cerrados / prometidos."""
+    return (f'<div class="vg-diag"><div class="ic">{icono("calendario", 34)}</div>'
+            f'<div style="flex:1"><div class="t">Tiempo promedio de diagnósticos</div>'
+            f'<div class="v">{_e(dias)}</div><div class="s">Días calendario</div></div>'
+            f'<div class="sep"></div><div class="ic">{icono("check", 28)}</div>'
+            f'<div><div class="t">Cerrados / prometidos</div><div class="v2">{int(cerrados)} / {int(prometidos)}</div>'
+            f'<div class="s">diagnósticos</div></div></div>')
 
 
 def gerencias(conteo: dict) -> str:

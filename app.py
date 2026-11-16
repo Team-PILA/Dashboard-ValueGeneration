@@ -104,14 +104,11 @@ with k4:
     html_(ui.hero("# Total de Intervenciones", str(r["intervenciones"]),
                   "Proyectos marcados con «¿Genera eficiencia?»", "capas", "plomo"))
 
-t1, t2, t3 = st.columns([1, 1, 1.45], gap="small")
+t1, t3 = st.columns([2, 1.45], gap="small")
 with t1:
-    html_(ui.tile("Tiempo promedio de diagnóstico",
-                  "Sin datos" if r["diag_promedio_dias"] is None else f"{r['diag_promedio_dias']:.0f} días",
-                  "Días calendario", "calendario"))
-with t2:
-    html_(ui.tile("Diagnósticos cerrados / prometidos", f"{r['diag_cerrados']} / {r['diag_prometidos']}",
-                  None, "check"))
+    html_(ui.diagnostico(
+        "Sin datos" if r["diag_promedio_dias"] is None else f"{r['diag_promedio_dias']:.0f} días",
+        r["diag_cerrados"], r["diag_prometidos"]))
 with t3:
     html_(ui.gerencias(r["por_gerencia"]))
 
