@@ -11,6 +11,7 @@ import math
 import pandas as pd
 
 ORDEN_GERENCIAS = ["GCO", "GCC", "GCAF", "GDSO", "GCDSO", "GG"]
+HORAS_FTE_MES = 160  # 1 FTE = 160 horas mensuales (9 600 minutos)
 
 
 def _num(df: pd.DataFrame, col: str) -> pd.Series:
@@ -49,12 +50,25 @@ def anios_disponibles(kpi: pd.DataFrame) -> list[int]:
     return sorted({int(a) for a in _num(kpi, "anio").dropna()}, reverse=True)
 
 
-def filtrar(kpi: pd.DataFrame, gerencias: pd.DataFrame, anio: int | None):
-    """anio=None -> todos los años (incluye proyectos sin Start Date Real)."""
-    if anio is None:
-        return kpi, gerencias
-    k = kpi[_num(kpi, "anio") == anio]
-    g = gerencias[_num(gerencias, "anio") == anio] if not gerencias.empty else gerencias
+def gerencias_disponibles(gerencias: pd.DataFrame) -> list[str]:
+    if gerencias.empty:
+        return []
+    todas = set(gerencias["gerencia"].dropna())
+    return [g for g in ORDEN_GERENCIAS if g in todas] + sorted(g for g in todas if g not in ORDEN_GERENCIAS)
+
+
+def filtrar(kpi: pd.DataFrame, gerencias: pd.DataFrame, anio: int | None, gcs: list[str] | None = None):
+    """anio=None -> todos los años (incluye proyectos sin Start Date Real).
+    gcs=None o [] -> todas las gerencias; si no, solo proyectos que impactan alguna de esas GCs
+    y el desglose por gerencia muestra solo esas GCs."""
+    k, g = kpi, gerencias
+    if anio is not None:
+        k = k[_num(k, "anio") == anio]
+        g = g[_num(g, "anio") == anio] if not g.empty else g
+    if gcs:
+        g = g[g["gerencia"].isin(gcs)] if not g.empty else g
+        ids = set(g["proyecto_id"]) if not g.empty else set()
+        k = k[k["proyecto_id"].isin(ids)]
     return k, g
 
 
@@ -79,27 +93,36 @@ def calcular(kpi: pd.DataFrame, gerencias: pd.DataFrame) -> dict:
     # --- Tiempo de diagnóstico (días calendario, solo diagnósticos cerrados)
     dias = _num(kpi, "diag_dias").dropna()
     r["diag_promedio_dias"] = float(dias.mean()) if not dias.empty else None
-    r["diag_cerrados"] = int(len(dias))
+    # n cerrados / total prometidos (prometido = actividad de diagnóstico con Entregable lleno)
+    prometido = _bool(kpi, "diag_prometido")
+    r["diag_prometidos"] = int(prometido.sum())
+    r["diag_cerrados"] = int((prometido & _bool(kpi, "diag_cerrado")).sum())
 
     # --- FTE
     r["fte_potencial"] = _suma(_num(kpi, "fte_potencial_total"))
-    r["fte_real"] = _suma(_num(kpi, "fte_real_optimizado"))
+    r["fte_real"] = _suma(_num(kpi, "fte_real"))                 # fórmula "FTE Real"
     r["fte_diseno_org"] = _suma(_num(kpi, "fte_diseno_org"))
     r["fte_make_or_buy"] = _suma(_num(kpi, "fte_make_or_buy"))
     r["fte_optim_procesos"] = _suma(_num(kpi, "fte_optim_procesos"))
+    # Optimización interna: impacto en horas mensuales -> FTE
+    hp, hr = _suma(_num(kpi, "impacto_hrs_potencial")), _suma(_num(kpi, "impacto_hrs_real"))
+    r["impacto_hrs_potencial"], r["impacto_hrs_real"] = hp, hr
+    r["fte_impacto_potencial"] = None if hp is None else hp / HORAS_FTE_MES
+    r["fte_impacto_real"] = None if hr is None else hr / HORAS_FTE_MES
     r["procesos_analizados"] = _suma(_num(kpi, "procesos_analizados"))
     r["proyectos_con_procesos"] = int(_num(kpi, "procesos_analizados").notna().sum())
 
-    # --- Intervenciones por gerencia central
+    # --- Intervenciones = proyectos con eficiencia (ya filtrados); desglose por GC
     if gerencias.empty:
-        r["intervenciones"] = 0
+        r["intervenciones"] = r["proyectos"]
         r["intervenciones_total"] = 0
         r["por_gerencia"] = {}
     else:
         cuenta = gerencias["gerencia"].value_counts()
         orden = [g for g in ORDEN_GERENCIAS if g in cuenta.index] + sorted(
             g for g in cuenta.index if g not in ORDEN_GERENCIAS)
-        r["intervenciones"] = int(len(cuenta))          # GCs distintas impactadas (sin repetir)
+        r["intervenciones"] = r["proyectos"]            # proyectos marcados con eficiencia
+        r["gerencias_distintas"] = int(len(cuenta))
         r["intervenciones_total"] = int(cuenta.sum())   # pares proyecto-GC (una GC por proyecto)
         r["por_gerencia"] = {g: int(cuenta[g]) for g in orden}
 

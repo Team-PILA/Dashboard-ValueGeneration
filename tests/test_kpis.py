@@ -10,13 +10,13 @@ import kpis  # noqa: E402
 def _kpi():
     return pd.DataFrame([
         # proyecto con todo
-        dict(proyecto="A", anio=2025, valor_as_is_usd=100.0, valor_to_be_usd=60.0, valor_real_post_usd=70.0, diag_dias=12, procesos_analizados=3,
+        dict(proyecto="A", anio=2025, valor_as_is_usd=100.0, valor_to_be_usd=60.0, valor_real_post_usd=70.0, diag_dias=12, procesos_analizados=3, fte_real=2.0, impacto_hrs_potencial=320.0, impacto_hrs_real=160.0, diag_prometido=True, diag_cerrado=True, proyecto_id="a",
              fte_potencial_total=3.0, fte_real_optimizado=2.0, fte_diseno_org=1.0,
              diag_total=3, diag_en_timebox=2, entregables_comprometidos=4, entregables_en_fecha=3,
              bc_presentado=True, bc_ok=True, costo_benchmark=50.0, costo_evitado_usd=20.0,
              vsm_lead_ini=100.0, vsm_lead_post=50.0, vsm_esfuerzo_ini=20.0, vsm_esfuerzo_post=20.0),
         # sin To Be ni lead post: no debe entrar a esos cocientes
-        dict(proyecto="B", anio=2026, valor_as_is_usd=900.0, valor_to_be_usd=None, valor_real_post_usd=None, diag_dias=None, procesos_analizados=None,
+        dict(proyecto="B", anio=2026, valor_as_is_usd=900.0, valor_to_be_usd=None, valor_real_post_usd=None, diag_dias=None, procesos_analizados=None, fte_real=None, impacto_hrs_potencial=None, impacto_hrs_real=None, diag_prometido=True, diag_cerrado=False, proyecto_id="b",
              fte_potencial_total=1.0, fte_real_optimizado=None, fte_diseno_org=None,
              diag_total=0, diag_en_timebox=0, entregables_comprometidos=0, entregables_en_fecha=0,
              bc_presentado=False, bc_ok=False, costo_benchmark=30.0, costo_evitado_usd=None,
@@ -25,9 +25,9 @@ def _kpi():
 
 
 def _ger():
-    return pd.DataFrame([dict(proyecto="A", anio=2025, gerencia="GCC"),
-                         dict(proyecto="A", anio=2025, gerencia="GCO"),
-                         dict(proyecto="B", anio=2026, gerencia="GCC")])
+    return pd.DataFrame([dict(proyecto_id="a", proyecto="A", anio=2025, gerencia="GCC"),
+                         dict(proyecto_id="a", proyecto="A", anio=2025, gerencia="GCO"),
+                         dict(proyecto_id="b", proyecto="B", anio=2026, gerencia="GCC")])
 
 
 def test_totales_solo_con_ambos_datos():
@@ -38,6 +38,9 @@ def test_totales_solo_con_ambos_datos():
     assert r["proyectos_con_real"] == 1
     assert r["diag_promedio_dias"] == 12 and r["diag_cerrados"] == 1
     assert r["procesos_analizados"] == 3 and r["proyectos_con_procesos"] == 1
+    assert r["diag_cerrados"] == 1 and r["diag_prometidos"] == 2
+    assert r["fte_potencial"] == 4 and r["fte_real"] == 2
+    assert r["fte_impacto_potencial"] == 2 and r["fte_impacto_real"] == 1   # 320/160, 160/160
     assert r["lead_ini"] == 100 and r["lead_post"] == 50
     assert abs(r["pct_reduccion_lead"] - 0.5) < 1e-9
     assert r["proyectos_con_vsm"] == 1
@@ -53,8 +56,8 @@ def test_ratios_suma_sobre_suma():
 
 def test_intervenciones_y_orden_gerencias():
     r = kpis.calcular(_kpi(), _ger())
-    assert r["intervenciones"] == 2          # GCC y GCO, sin contar GCC dos veces
-    assert r["intervenciones_total"] == 3
+    assert r["intervenciones"] == 2          # 2 proyectos con eficiencia
+    assert r["gerencias_distintas"] == 2 and r["intervenciones_total"] == 3
     assert list(r["por_gerencia"]) == ["GCO", "GCC"]
     assert r["por_gerencia"]["GCC"] == 2
 
@@ -77,3 +80,13 @@ def test_vacio_no_falla():
 def test_formatos():
     assert kpis.fmt_pct(0.3281) == "32.8 %"
     assert kpis.fmt_usd(84000) == "$ 84,000"
+
+
+def test_filtro_gerencia():
+    k, g = kpis.filtrar(_kpi(), _ger(), None, ["GCO"])
+    r = kpis.calcular(k, g)
+    assert r["proyectos"] == 1 and r["intervenciones"] == 1
+    assert r["por_gerencia"] == {"GCO": 1}
+    k, g = kpis.filtrar(_kpi(), _ger(), None, ["GCC"])
+    assert kpis.calcular(k, g)["proyectos"] == 2
+    assert kpis.gerencias_disponibles(_ger()) == ["GCO", "GCC"]

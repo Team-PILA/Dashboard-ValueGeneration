@@ -31,7 +31,6 @@ def _secreto(nombre: str, defecto: str = "") -> str:
 
 
 ESQUEMA = _secreto("ESQUEMA", "value_generation")
-UNIDAD_LEAD_TIME = "horas"   # unidad en que se registran los Lead Time del VSM en Notion
 
 COLORES = {  # paleta del whiteboard
     "verde_fuerte": "#9FE2BF", "verde": "#CDE8A8", "azul": "#A9B8F8",
@@ -51,6 +50,8 @@ st.markdown("""
 .vg-sec-sub{font-size:.75rem;text-align:center;opacity:.7;margin-bottom:10px}
 .vg-ger{font-size:.95rem;font-weight:600;text-align:center;padding:8px;border-radius:8px;
         border:1px solid rgba(0,0,0,.12);background:#F5EEFA;color:#1d1d1f;margin-bottom:12px}
+.st-key-caja_azul{background:#9DC3E6;border-radius:10px;padding:14px;color:#1d1d1f}
+.vg-nota{font-size:.72rem;text-align:center;opacity:.75;margin:-6px 0 10px}
 </style>""", unsafe_allow_html=True)
 
 
@@ -84,108 +85,108 @@ if datos is None:
     st.error("No se pudo leer la base de datos. Revisa los secrets de la app.")
     st.stop()
 
-# ---------------------------------------------------------------- encabezado + filtro
-c_tit, c_fil = st.columns([4, 1])
+# ---------------------------------------------------------------- encabezado + filtros
+c_tit, c_anio, c_gc = st.columns([3.2, 1, 1.3])
 with c_tit:
     st.markdown("<h1 style='color:#0B63C4;margin-bottom:0'>VALUE GENERATION</h1>", unsafe_allow_html=True)
     if ESQUEMA == "vg_demo":
         st.warning("Datos de prueba (vg_demo). No son datos reales.")
-with c_fil:
+with c_anio:
     anios = kpis.anios_disponibles(datos["kpi"])
     opcion = st.selectbox("Filtrar por año", ["Todos"] + anios, help="Según Start Date Real")
+with c_gc:
+    gcs = st.multiselect("Filtrar por GC", kpis.gerencias_disponibles(datos["gerencias"]),
+                         placeholder="Todas", help="Proyectos que impactan alguna de las GC elegidas")
 anio = None if opcion == "Todos" else int(opcion)
 
-kpi_df, ger_df = kpis.filtrar(datos["kpi"], datos["gerencias"], anio)
+kpi_df, ger_df = kpis.filtrar(datos["kpi"], datos["gerencias"], anio, gcs)
 r = kpis.calcular(kpi_df, ger_df)
 
 if r["proyectos"] == 0:
     st.info("No hay proyectos con «¿Genera eficiencia?» marcado para este filtro.")
     st.stop()
 
-# ---------------------------------------------------------------- layout del whiteboard
-izq, der = st.columns([1.25, 3.75], gap="medium")
 
+def tabla(columnas: dict, formatos: dict) -> None:
+    """Tabla de desglose por proyecto con las columnas {origen: título} del DataFrame filtrado."""
+    t = kpi_df[[c for c in columnas if c in kpi_df.columns]].rename(columns=columnas)
+    st.dataframe(t, hide_index=True, width="stretch",
+                 column_config={c: st.column_config.NumberColumn(format=f) for c, f in formatos.items()})
+
+
+# ---------------------------------------------------------------- fila superior
+izq, der = st.columns([3.3, 2], gap="medium")
 with izq:
-    card("% [Monto Real vs. Potencial]", kpis.fmt_pct(r["pct_real_vs_potencial"]),
-         (f"Real {kpis.fmt_usd(r['ahorro_real'])} de {kpis.fmt_usd(r['ahorro_potencial_cerrados'])} potencial "
-          f"({r['proyectos_con_real']} proyecto(s) con valorización real)")
-         if r["proyectos_con_real"] else "Aún sin valorización real post-intervención",
-         color="verde_fuerte", grande=True)
-    card("Tiempo promedio de diagnóstico",
-         "Sin datos" if r["diag_promedio_dias"] is None else f"{r['diag_promedio_dias']:.0f} días",
-         f"Días calendario · {r['diag_cerrados']} diagnóstico(s) cerrado(s)", color="verde")
-    card("% de entregables cumplidos a la fecha", kpis.fmt_pct(r["pct_entregables_en_fecha"]), color="verde")
-    por_definir("% WIP en prioridades vigentes", "azul")
-    dias = fuente.meta(datos["umbral"], "diag_timebox_dias")
-    st.caption(f"Lead Time estándar: {int(dias)} días hábiles" if dias else "Lead Time estándar: por definir")
-    card("% Business case aprobados", kpis.fmt_pct(r["pct_bc_aprobados"]),
-         f"{r['bc_aprobados']} de {r['bc_presentados']} presentados", color="azul")
-    por_definir("Benefit sustainability rate", "azul")
-
-with der:
-    a, b, c = st.columns([2, 1, 2.4])
+    a, b, c = st.columns(3)
     with a:
+        card("% Accuracy", kpis.fmt_pct(r["pct_real_vs_potencial"]),
+             f"Ahorro Real / Ahorro Potencial · {r['proyectos_con_real']} proyecto(s) con ahorro real",
+             color="verde_fuerte")
+    with b:
+        card("AHORRO REAL [USD]", kpis.fmt_usd(r["ahorro_real"]), color="morado")
+    with c:
         card("AHORRO POTENCIAL [USD]", kpis.fmt_usd(r["ahorro_usd"]),
              f"{r['proyectos_con_valorizacion']} proyecto(s) con valorización", color="morado")
-    with b:
-        card("FTE", kpis.fmt_num(r["fte_potencial"]), f"Real optimizado: {kpis.fmt_num(r['fte_real'])}",
-             color="morado")
-    with c:
-        card("# Total de Intervenciones", str(r["intervenciones"]),
-             f"{r['intervenciones_total']} intervenciones en {r['proyectos']} proyecto(s)",
-             color="morado")
-        detalle = "  |  ".join(f"{g}: {n}" for g, n in r["por_gerencia"].items()) or "Sin gerencias"
-        st.markdown(f'<div class="vg-ger">{html.escape(detalle)}</div>', unsafe_allow_html=True)
+    d, e = st.columns(2)
+    with d:
+        card("Tiempo promedio de diagnóstico",
+             "Sin datos" if r["diag_promedio_dias"] is None else f"{r['diag_promedio_dias']:.0f} días",
+             "Días calendario", color="verde")
+    with e:
+        card("Diagnósticos cerrados / prometidos", f"{r['diag_cerrados']} / {r['diag_prometidos']}",
+             color="verde")
+with der:
+    card("# Total de Intervenciones", str(r["intervenciones"]),
+         "Proyectos marcados con «¿Genera eficiencia?»", color="morado")
+    detalle = "  |  ".join(f"{g}: {n}" for g, n in r["por_gerencia"].items()) or "Sin gerencias"
+    st.markdown(f'<div class="vg-ger">{html.escape(detalle)}</div>', unsafe_allow_html=True)
 
-    s1, s2, s3 = st.columns(3)
-    with s1, st.container(border=True):
-        st.markdown('<p class="vg-sec">Análisis con Impacto Organizacional</p>'
-                    '<p class="vg-sec-sub">[FTE vs. HC]</p>', unsafe_allow_html=True)
-        card("FTE Identificados", kpis.fmt_num(r["fte_diseno_org"]), "FTE Diseño Organizacional",
-             color="salmon", grande=True)
-    with s2, st.container(border=True):
-        st.markdown('<p class="vg-sec">Inhousing: Impacto en Gasto OPEX</p>'
-                    '<p class="vg-sec-sub">[Servicio Tercero vs. PI]</p>', unsafe_allow_html=True)
-        card("USD Costo Evitado", kpis.fmt_usd(r["costo_evitado"]),
-             f"Consultora {kpis.fmt_usd(r['costo_benchmark'])} − PI {kpis.fmt_usd(r['costo_real_pi'])}",
-             color="salmon", grande=True)
-        card("USD [Promedio de Consultoría]", kpis.fmt_usd(r["promedio_consultoria"]), color="salmon")
-    with s3, st.container(border=True):
-        st.markdown('<p class="vg-sec">Optimización interna de Procesos</p>'
-                    '<p class="vg-sec-sub">[Calidad vs. Velocidad]</p>', unsafe_allow_html=True)
-        p1, p2 = st.columns(2)
-        with p1:
-            card("# Procesos Analizados",
-                 "Sin datos" if r["procesos_analizados"] is None else f"{r['procesos_analizados']:.0f}",
-                 f"en {r['proyectos_con_procesos']} proyecto(s)", color="salmon")
-        with p2:
-            por_definir("FTE Impactos para Calidad", "salmon")
-        sub = (f"{kpis.fmt_num(r['reduccion_lead'], 0)} {UNIDAD_LEAD_TIME} reducidas\n"
-               f"Inicial: {kpis.fmt_num(r['lead_ini'], 0)} {UNIDAD_LEAD_TIME} · "
-               f"Actual: {kpis.fmt_num(r['lead_post'], 0)} {UNIDAD_LEAD_TIME}"
-               if r["reduccion_lead"] is not None else None)
-        card("Reducción Lead Time", kpis.fmt_pct(r["pct_reduccion_lead"]), sub, color="salmon")
+# ---------------------------------------------------------------- tres secciones
+s1, s2, s3 = st.columns(3, gap="medium")
 
-# ---------------------------------------------------------------- detalle
-with st.expander("Detalle por proyecto"):
-    cols = {
-        "proyecto": "Proyecto", "tipo_proyecto": "Tipo", "anio": "Año", "gerencia_central": "Gerencia",
-        "pct_entregables_en_fecha": "% entregables", "diag_dias": "Días diagnóstico",
-        "ahorro_potencial_usd": "Ahorro potencial USD", "ahorro_real_usd": "Ahorro real USD",
-        "pct_real_vs_potencial": "% Real vs Pot.",
-        "pct_reduccion_lead_time": "% Red. Lead Time", "bc_aprobado": "¿BC Aprobado?",
-    }
-    tabla = kpi_df[[c for c in cols if c in kpi_df.columns]].rename(columns=cols)
-    pcts = ("% entregables", "% Real vs Pot.", "% Red. Lead Time")
-    for c in pcts:
-        if c in tabla:
-            tabla[c] = pd.to_numeric(tabla[c], errors="coerce") * 100
-    st.dataframe(
-        tabla, hide_index=True, width="stretch",
-        column_config={c: st.column_config.NumberColumn(format="%.1f %%") for c in pcts}
-        | {c: st.column_config.NumberColumn(format="$ %.0f") for c in ("Ahorro potencial USD", "Ahorro real USD")}
-        | {"Año": st.column_config.NumberColumn(format="%d"),
-           "Días diagnóstico": st.column_config.NumberColumn(format="%d")})
+with s1, st.container(key="caja_azul"):
+    st.markdown('<p class="vg-sec">Análisis con Impacto Organizacional</p>'
+                '<p class="vg-sec-sub">[FTE vs. HC]</p>', unsafe_allow_html=True)
+    f1, f2 = st.columns(2)
+    with f1:
+        card("Total FTEs Potenciales", kpis.fmt_num(r["fte_potencial"]), color="salmon")
+    with f2:
+        card("FTE Reales", kpis.fmt_num(r["fte_real"]), color="morado")
+    tabla({"proyecto": "Proyecto", "fte_potencial_total": "Total FTE Potencial", "fte_real": "FTE Real"},
+          {"Total FTE Potencial": "%.1f", "FTE Real": "%.1f"})
+
+with s2, st.container(border=True):
+    st.markdown('<p class="vg-sec">Inhousing: Impacto en Gasto OPEX</p>'
+                '<p class="vg-sec-sub">[Servicio Tercero vs. PI]</p>', unsafe_allow_html=True)
+    card("Costo Evitado ante consultoras [USD]", kpis.fmt_usd(r["costo_evitado"]),
+         f"Consultora {kpis.fmt_usd(r['costo_benchmark'])} − Proyecto PI {kpis.fmt_usd(r['costo_real_pi'])}",
+         color="salmon")
+    kpi_df = kpi_df.assign(
+        _costo_evitado=pd.to_numeric(kpi_df.get("costo_benchmark"), errors="coerce")
+        - pd.to_numeric(kpi_df.get("costo_evitado_usd"), errors="coerce"))
+    tabla({"proyecto": "Proyecto", "alcance": "Servicio / Alcance",
+           "costo_evitado_usd": "Costo proyecto PI", "costo_benchmark": "Costo serv. con 3ro",
+           "_costo_evitado": "Costo evitado"},
+          {c: "$ %.0f" for c in ("Costo proyecto PI", "Costo serv. con 3ro", "Costo evitado")})
+
+with s3, st.container(border=True):
+    st.markdown('<p class="vg-sec">Optimización interna de Procesos</p>'
+                '<p class="vg-sec-sub">[Calidad vs. Velocidad]</p>', unsafe_allow_html=True)
+    o1, o2 = st.columns(2)
+    with o1:
+        card("FTE Total REALES", kpis.fmt_num(r["fte_impacto_real"]),
+             f"{kpis.fmt_num(r['impacto_hrs_real'], 0)} hrs/mes" if r["impacto_hrs_real"] is not None else None,
+             color="morado")
+    with o2:
+        card("FTE Total POTENCIALES", kpis.fmt_num(r["fte_impacto_potencial"]),
+             f"{kpis.fmt_num(r['impacto_hrs_potencial'], 0)} hrs/mes" if r["impacto_hrs_potencial"] is not None
+             else None, color="salmon")
+    st.markdown(f'<p class="vg-nota">1 FTE = {kpis.HORAS_FTE_MES} horas mensuales</p>', unsafe_allow_html=True)
+    tabla({"proyecto": "Proyecto", "alcance": "Alcance de análisis",
+           "vsm_lead_ini": "Lead Time As Is (h)", "vsm_lead_post": "Lead Time To Be (h)",
+           "impacto_hrs_potencial": "Impacto Potencial (h)", "impacto_hrs_real": "Impacto Real (h)"},
+          {c: "%.0f" for c in ("Lead Time As Is (h)", "Lead Time To Be (h)",
+                                "Impacto Potencial (h)", "Impacto Real (h)")})
 
 corrida = datos["corrida"]
 st.caption("Datos al corte: " + (corrida.strftime("%d/%m/%Y %H:%M") if corrida else "sin registro")

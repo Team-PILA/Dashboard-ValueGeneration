@@ -2,9 +2,9 @@
 -- Value Generation · DEMO (Supabase). Datos ficticios para probar el dashboard
 -- sin tocar Notion ni las tablas reales. El ETL nunca escribe en "vg_demo",
 -- así que no importa la hora ni si alguien corre el workflow a mano.
--- Requiere 01, 02 y 06 ya ejecutados. Se puede ejecutar varias veces
+-- Requiere 01, 02 y 07 ya ejecutados. Se puede ejecutar varias veces
 -- (borra y recarga los datos demo). Para eliminarlo todo: drop schema vg_demo cascade;
--- Las vistas son copia exacta de las de 06, apuntando a las tablas demo.
+-- Las vistas son copia exacta de las de 07, apuntando a las tablas demo.
 -- =====================================================================
 create schema if not exists vg_demo;
 
@@ -15,6 +15,10 @@ alter table vg_demo.proyecto add column if not exists valor_real_post_usd numeri
 alter table vg_demo.proyecto add column if not exists ent_comprometidos numeric(10,0);
 alter table vg_demo.proyecto add column if not exists ent_cumplidos numeric(10,0);
 alter table vg_demo.proyecto add column if not exists procesos_analizados numeric(10,0);
+alter table vg_demo.proyecto add column if not exists fte_real numeric(10,2);
+alter table vg_demo.proyecto add column if not exists alcance text;
+alter table vg_demo.proyecto add column if not exists impacto_hrs_potencial numeric(12,2);
+alter table vg_demo.proyecto add column if not exists impacto_hrs_real numeric(12,2);
 
 -- 2. Datos ficticios
 truncate vg_demo.proyecto, vg_demo.actividad;
@@ -82,7 +86,25 @@ where x.proyecto = p.nombre;
 update vg_demo.proyecto set procesos_analizados = case proyecto_id
   when 'demo-1' then 3 when 'demo-2' then 2 when 'demo-3' then 1 when 'demo-4' then 2 when 'demo-6' then 1 end;
 
--- 3. Vistas (copia de 06 sobre las tablas demo)
+-- FTE Real, Alcance e Impacto en horas mensuales
+update vg_demo.proyecto set
+  fte_real = fte_real_optimizado,
+  alcance = case proyecto_id
+    when 'demo-1' then 'Proceso de compras: requerimiento a orden de compra'
+    when 'demo-2' then 'Mesa de ayuda N1 y N2'
+    when 'demo-3' then 'Mantenimiento preventivo de equipos'
+    when 'demo-4' then 'Facturación y cobranza'
+    when 'demo-5' then 'Estructura organizacional de Operaciones' end,
+  impacto_hrs_potencial = case proyecto_id when 'demo-1' then 480 when 'demo-2' then 320 when 'demo-3' then 400
+                                          when 'demo-4' then 240 end,
+  impacto_hrs_real      = case proyecto_id when 'demo-1' then 400 when 'demo-2' then 240 when 'demo-4' then 160 end;
+
+-- Entregable en una actividad de diagnóstico (activ. 5 = "2. Analizar") para marcar el diagnóstico como prometido.
+-- demo-5 queda sin entregable de diagnóstico (no cuenta como prometido).
+update vg_demo.actividad set entregable = 'Informe de diagnóstico'
+where actividad_id in ('demo-1-5', 'demo-2-5', 'demo-3-5', 'demo-4-5', 'demo-6-5');
+
+-- 3. Vistas (copia de 07 sobre las tablas demo)
 drop view if exists vg_demo.v_lead_time_anio;
 drop view if exists vg_demo.v_bc_anio;
 drop view if exists vg_demo.v_intervencion_gerencia;
@@ -97,6 +119,7 @@ select p.proyecto_id, p.nombre as proyecto, p.tipo_proyecto, p.status,
        p.fte_make_or_buy, p.fte_optim_procesos, p.costo_benchmark,
        p.valor_as_is_usd, p.valor_to_be_usd, p.valor_real_post_usd,
        p.ent_comprometidos, p.ent_cumplidos, p.procesos_analizados,
+       p.fte_real, p.alcance, p.impacto_hrs_potencial, p.impacto_hrs_real,
        p.vsm_ciclo_ini,  p.vsm_lead_ini,  p.vsm_espera_ini,  p.vsm_esfuerzo_ini,
        p.vsm_ciclo_post, p.vsm_lead_post, p.vsm_espera_post, p.vsm_esfuerzo_post
 from vg_demo.proyecto p
@@ -116,7 +139,8 @@ diag as (
          min(a.real_inicio)               as diag_inicio,
          max(a.real_fin)                  as diag_fin,
          count(*)                         as diag_actividades,
-         bool_and(a.real_fin is not null and a.esta_done) as diag_cerrado
+         bool_and(a.real_fin is not null and a.esta_done) as diag_cerrado,
+         bool_or(nullif(btrim(coalesce(a.entregable, '')), '') is not null) as diag_prometido
   from vg_demo.actividad a
   where exists (select 1 from value_generation.fase_diagnostico f
                 where lower(btrim(f.fase)) in (lower(btrim(coalesce(a.fase_ejecucion, ''))),
@@ -136,6 +160,7 @@ select p.*,
        diag.diag_inicio,
        diag.diag_fin,
        coalesce(diag.diag_cerrado, false)                                     as diag_cerrado,
+       coalesce(diag.diag_prometido, false)                                   as diag_prometido,
        case when diag.diag_cerrado and diag.diag_inicio is not null
             then diag.diag_fin - diag.diag_inicio end                         as diag_dias,
        -- Consolidated value
