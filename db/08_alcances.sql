@@ -1,8 +1,8 @@
 -- =====================================================================
 -- Value Generation · cambio 08 (16/11)
 --  - Dos campos de texto en Intervenciones, uno por cuadrante:
---      "Alcance E2E del proyecto" -> Inhousing: Impacto en Gasto OPEX
---      "Servicio Requerido"       -> Optimización interna de Procesos
+--      "Servicio Requerido"       -> Inhousing: Impacto en Gasto OPEX
+--      "Alcance E2E del proyecto" -> Optimización interna de Procesos (formato "Desde ... hasta ...")
 --  - Cada proyecto tiene UNA sola Gerencia Central (las vistas no cambian por eso).
 --  Incluye todo lo de 04 a 07, así que los reemplaza.
 -- Se puede ejecutar varias veces. Requiere 01 y 02 ya ejecutados.
@@ -18,8 +18,8 @@ alter table proyectos.proyecto
   add column if not exists alcance             text,           -- "Alcance"
   add column if not exists impacto_hrs_potencial numeric(12,2), -- "Impacto Hrs Potencial" (mensual)
   add column if not exists impacto_hrs_real    numeric(12,2),  -- "Impacto Hrs Real" (mensual)
-  add column if not exists alcance_e2e         text,           -- "Alcance E2E del proyecto" (Inhousing)
-  add column if not exists servicio_requerido  text;           -- "Servicio Requerido" (Optimización interna)
+  add column if not exists alcance_e2e         text,           -- "Alcance E2E del proyecto" (Optimización interna)
+  add column if not exists servicio_requerido  text;           -- "Servicio Requerido" (Inhousing)
 
 -- 2. Fases que forman el diagnóstico (se editan aquí, sin tocar código).
 --    Compara contra "Fase de Ejecución" o "Fase Ruta" de la actividad, sin importar mayúsculas.

@@ -101,14 +101,19 @@ update vg_demo.proyecto set
                                           when 'demo-4' then 240 end,
   impacto_hrs_real      = case proyecto_id when 'demo-1' then 400 when 'demo-2' then 240 when 'demo-4' then 160 end;
 
--- Alcance E2E (Inhousing) y Servicio Requerido (Optimización interna)
+-- Servicio Requerido (Inhousing) y Alcance E2E (Optimización interna, formato "Desde ... hasta ...")
 update vg_demo.proyecto set
-  alcance_e2e = alcance,
   servicio_requerido = case proyecto_id
-    when 'demo-1' then 'Rediseño del flujo de compras'
-    when 'demo-2' then 'Automatización de tickets N1'
-    when 'demo-3' then 'Plan de mantenimiento preventivo'
-    when 'demo-4' then 'Conciliación automática de cobranzas' end;
+    when 'demo-1' then 'Consultoría de rediseño del proceso de compras'
+    when 'demo-2' then 'Servicio externo de mesa de ayuda N1 y N2'
+    when 'demo-3' then 'Tercerización del mantenimiento preventivo'
+    when 'demo-4' then 'Consultoría en facturación y cobranza'
+    when 'demo-5' then 'Consultoría de diseño organizacional' end,
+  alcance_e2e = case proyecto_id
+    when 'demo-1' then 'Desde el requerimiento del área hasta la emisión de la orden de compra'
+    when 'demo-2' then 'Desde el registro del ticket hasta su cierre en N2'
+    when 'demo-3' then 'Desde la programación del mantenimiento hasta la conformidad del equipo'
+    when 'demo-4' then 'Desde la emisión de la factura hasta la conciliación del cobro' end;
 
 -- Entregable en una actividad de diagnóstico (activ. 5 = "2. Analizar") para marcar el diagnóstico como prometido.
 -- demo-5 queda sin entregable de diagnóstico (no cuenta como prometido).

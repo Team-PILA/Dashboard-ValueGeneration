@@ -79,12 +79,16 @@ def html_(fragmento: str) -> None:
 
 
 def tabla(columnas: dict, formatos: dict) -> None:
-    """Desglose por proyecto: {columna origen: título}; vacíos como «—»."""
+    """Desglose por proyecto: {columna origen: título}; números con formato y vacíos como «—»."""
     t = kpi_df[[c for c in columnas if c in kpi_df.columns]].rename(columns=columnas)
-    for c in formatos:
+    for c, f in formatos.items():
         if c in t:
-            t[c] = pd.to_numeric(t[c], errors="coerce")
-    st.dataframe(t.style.format(formatos, na_rep="—"), hide_index=True, width="stretch")
+            t[c] = pd.to_numeric(t[c], errors="coerce").map(lambda v, f=f: "—" if pd.isna(v) else f.format(v))
+    for c in t.columns:
+        if c not in formatos:
+            t[c] = t[c].map(lambda v: "—" if v is None or (isinstance(v, float) and pd.isna(v))
+                            or (isinstance(v, str) and not v.strip()) else v)
+    st.dataframe(t, hide_index=True, width="stretch")
 
 
 USD = "$ {:,.0f}"
@@ -133,7 +137,7 @@ with s2, st.container(border=True, key="sec_inh"):
     kpi_df = kpi_df.assign(
         _costo_evitado=pd.to_numeric(kpi_df.get("costo_benchmark"), errors="coerce")
         - pd.to_numeric(kpi_df.get("costo_evitado_usd"), errors="coerce"))
-    tabla({"proyecto": "Proyecto", "alcance_e2e": "Alcance E2E del proyecto",
+    tabla({"proyecto": "Proyecto", "servicio_requerido": "Servicio Requerido",
            "costo_evitado_usd": "Costo proyecto PI", "costo_benchmark": "Costo serv. con 3ro",
            "_costo_evitado": "Costo evitado"},
           {c: USD for c in ("Costo proyecto PI", "Costo serv. con 3ro", "Costo evitado")})
@@ -150,7 +154,7 @@ with s3, st.container(border=True, key="sec_opt"):
                          f"{kpis.fmt_num(r['impacto_hrs_potencial'], 0)} hrs/mes"
                          if r["impacto_hrs_potencial"] is not None else None, "rayo", "azul"))
     html_(ui.nota(f"1 FTE = {kpis.HORAS_FTE_MES} horas mensuales"))
-    tabla({"proyecto": "Proyecto", "servicio_requerido": "Servicio Requerido",
+    tabla({"proyecto": "Proyecto", "alcance_e2e": "Alcance E2E del proyecto",
            "vsm_lead_ini": "Lead Time As Is (h)", "vsm_lead_post": "Lead Time To Be (h)",
            "impacto_hrs_potencial": "Impacto Potencial (h)", "impacto_hrs_real": "Impacto Real (h)"},
           {c: "{:,.0f}" for c in ("Lead Time As Is (h)", "Lead Time To Be (h)",
