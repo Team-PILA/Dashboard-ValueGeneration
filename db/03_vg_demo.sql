@@ -33,10 +33,10 @@ insert into vg_demo.proyecto (
   vsm_ciclo_ini, vsm_lead_ini, vsm_espera_ini, vsm_esfuerzo_ini,
   vsm_ciclo_post, vsm_lead_post, vsm_espera_post, vsm_esfuerzo_post
 ) values
-  ('demo-1','[DEMO] Optimización Compras','Ruta de Eficiencia','Done',          '2025-03-03','2025-06-27', true,'GCAF',       'Sí',            0,1.0,2.0, 3.0,2.5, 45000, 120000, 80000, 90000,  40,160,120,40,  30,100,70,30),
-  ('demo-2','[DEMO] Rediseño Mesa de Ayuda','Ruta de Eficiencia','Done',        '2025-08-04','2025-11-28', true,'GCO',        'No',          1.5,0,  1.0, 2.5,1.5, 38000,  90000, 70000, 76000,  24, 96, 72,24,  20, 72, 52,20),
+  ('demo-1','[DEMO] Optimización Compras','Ruta de Eficiencia','Done',          '2025-03-03','2025-06-27', true,'GCAF',       'Sí',            0,1.0,2.0, 3.0,2.5, 45000, 120000, 80000, 90000,  2,6.5,4.5,2,  1.5,4.25,2.75,1.5),
+  ('demo-2','[DEMO] Rediseño Mesa de Ayuda','Ruta de Eficiencia','Done',        '2025-08-04','2025-11-28', true,'GCO',        'No',          1.5,0,  1.0, 2.5,1.5, 38000,  90000, 70000, 76000,  1,4,3,1,  0.75,3,2.25,0.75),
   ('demo-3','[DEMO] Make or Buy Mantenimiento','Ruta de Eficiencia','In progress','2026-02-02',null,     true,'GCC',        'En evaluación', 0,3.0,0,   3.0,null, 60000, 200000,150000, null, null,null,null,null, null,null,null,null),
-  ('demo-4','[DEMO] Flujo Facturación','Modelo PM','In progress',               '2026-04-06',null,       true,'GCDSO',      'Sí',            0,0,  1.5, 1.5,1.0, 25000,  50000, 35000, 40000,  16, 80, 64,16,  12, 48, 36,12),
+  ('demo-4','[DEMO] Flujo Facturación','Modelo PM','In progress',               '2026-04-06',null,       true,'GCDSO',      'Sí',            0,0,  1.5, 1.5,1.0, 25000,  50000, 35000, 40000,  0.5,3.5,3,0.5,  0.5,2,1.5,0.5),
   ('demo-5','[DEMO] Diseño Org. Operaciones','Ruta de Eficiencia','Not started','2026-07-01',null,       true,'GG',         'No aplica',   4.0,0,  0,   4.0,null, 52000,   null,  null,  null, null,null,null,null, null,null,null,null),
   ('demo-6','[DEMO] No genera eficiencia','Modelo PM','In progress',            '2026-05-04',null,       false,'GG',        'No aplica',     0,0,  0,   0,  null, 10000,   null,  null,  null, null,null,null,null, null,null,null,null);
 

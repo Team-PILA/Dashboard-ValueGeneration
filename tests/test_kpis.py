@@ -10,7 +10,7 @@ import kpis  # noqa: E402
 def _kpi():
     return pd.DataFrame([
         # proyecto con todo
-        dict(proyecto="A", anio=2025, valor_as_is_usd=100.0, valor_to_be_usd=60.0, valor_real_post_usd=70.0, diag_dias=12, procesos_analizados=3, fte_real=2.0, impacto_hrs_potencial=320.0, impacto_hrs_real=160.0, diag_prometido=True, diag_cerrado=True, proyecto_id="a",
+        dict(proyecto="A", anio=2025, valor_as_is_usd=100.0, valor_to_be_usd=60.0, valor_real_post_usd=70.0, diag_dias=12, procesos_analizados=3, fte_real=2.0, impacto_hrs_potencial=360.0, impacto_hrs_real=180.0, diag_prometido=True, diag_cerrado=True, proyecto_id="a",
              fte_potencial_total=3.0, fte_real_optimizado=2.0, fte_diseno_org=1.0,
              diag_total=3, diag_en_timebox=2, entregables_comprometidos=4, entregables_en_fecha=3,
              bc_presentado=True, bc_ok=True, costo_benchmark=50.0, costo_evitado_usd=20.0,
@@ -40,7 +40,7 @@ def test_totales_solo_con_ambos_datos():
     assert r["procesos_analizados"] == 3 and r["proyectos_con_procesos"] == 1
     assert r["diag_cerrados"] == 1 and r["diag_prometidos"] == 2
     assert r["fte_potencial"] == 4 and r["fte_real"] == 2
-    assert r["fte_impacto_potencial"] == 2 and r["fte_impacto_real"] == 1   # 320/160, 160/160
+    assert r["fte_impacto_potencial"] == 2 and r["fte_impacto_real"] == 1   # 360/180, 180/180
     assert r["lead_ini"] == 100 and r["lead_post"] == 50
     assert abs(r["pct_reduccion_lead"] - 0.5) < 1e-9
     assert r["proyectos_con_vsm"] == 1

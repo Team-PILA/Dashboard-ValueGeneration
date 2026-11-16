@@ -153,12 +153,12 @@ with s3, st.container(border=True, key="sec_opt"):
         html_(ui.metrica("FTE Total POTENCIALES", kpis.fmt_num(r["fte_impacto_potencial"]),
                          f"{kpis.fmt_num(r['impacto_hrs_potencial'], 0)} hrs/mes"
                          if r["impacto_hrs_potencial"] is not None else None, "rayo", "azul"))
-    html_(ui.nota(f"1 FTE = {kpis.HORAS_FTE_MES} horas mensuales"))
+    html_(ui.nota(f"1 FTE = {kpis.HORAS_FTE_MES} horas (equivalencia referencial)"))
     tabla({"proyecto": "Proyecto", "alcance_e2e": "Alcance E2E del proyecto",
-           "vsm_lead_ini": "Lead Time As Is (h)", "vsm_lead_post": "Lead Time To Be (h)",
+           "vsm_lead_ini": "Lead Time As Is (días)", "vsm_lead_post": "Lead Time To Be (días)",
            "impacto_hrs_potencial": "Impacto Potencial (h)", "impacto_hrs_real": "Impacto Real (h)"},
-          {c: "{:,.0f}" for c in ("Lead Time As Is (h)", "Lead Time To Be (h)",
-                                   "Impacto Potencial (h)", "Impacto Real (h)")})
+          {"Lead Time As Is (días)": "{:,.2f}", "Lead Time To Be (días)": "{:,.2f}",
+           "Impacto Potencial (h)": "{:,.0f}", "Impacto Real (h)": "{:,.0f}"})
 
 corrida = datos["corrida"]
 st.caption("Datos al corte: " + (corrida.strftime("%d/%m/%Y %H:%M") if corrida else "sin registro")

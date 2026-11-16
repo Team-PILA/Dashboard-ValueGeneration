@@ -11,7 +11,7 @@ import math
 import pandas as pd
 
 ORDEN_GERENCIAS = ["GCO", "GCC", "GCAF", "GDSO", "GCDSO", "GG"]
-HORAS_FTE_MES = 160  # 1 FTE = 160 horas mensuales (9 600 minutos)
+HORAS_FTE_MES = 180  # 1 FTE = 180 horas (equivalencia referencial definida por la jefatura)
 
 
 def _num(df: pd.DataFrame, col: str) -> pd.Series:
