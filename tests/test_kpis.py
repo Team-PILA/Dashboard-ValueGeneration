@@ -90,3 +90,10 @@ def test_filtro_gerencia():
     k, g = kpis.filtrar(_kpi(), _ger(), None, ["GCC"])
     assert kpis.calcular(k, g)["proyectos"] == 2
     assert kpis.gerencias_disponibles(_ger()) == ["GCO", "GCC"]
+
+
+def test_costo_pi_cero_no_cuenta():
+    k = _kpi().copy()
+    k.loc[0, "costo_evitado_usd"] = 0.0          # proyecto sin horas cargadas
+    r = kpis.calcular(k, _ger())
+    assert r["costo_evitado"] is None and r["costo_real_pi"] is None

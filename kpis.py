@@ -137,7 +137,7 @@ def calcular(kpi: pd.DataFrame, gerencias: pd.DataFrame) -> dict:
 
     # --- Inhousing: costo de consultora (benchmark) vs costo real del equipo PI
     bench, costo_pi = _num(kpi, "costo_benchmark"), _num(kpi, "costo_evitado_usd")  # en la vista = Σ Costo Real PI
-    mb = bench.notna() & costo_pi.notna()
+    mb = bench.notna() & costo_pi.notna() & (costo_pi > 0)   # costo PI = 0: aún sin horas cargadas, no cuenta
     r["costo_benchmark"] = _suma(bench[mb])
     r["costo_real_pi"] = _suma(costo_pi[mb])
     r["costo_evitado"] = _suma((bench - costo_pi)[mb])

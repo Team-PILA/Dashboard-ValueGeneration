@@ -134,9 +134,9 @@ with s2, st.container(border=True, key="sec_inh"):
     html_(ui.metrica("Costo Evitado ante consultoras [USD]", kpis.fmt_usd(r["costo_evitado"]),
                      f"Consultora {kpis.fmt_usd(r['costo_benchmark'])} − Proyecto PI {kpis.fmt_usd(r['costo_real_pi'])}",
                      "billete", "azul"))
-    kpi_df = kpi_df.assign(
-        _costo_evitado=pd.to_numeric(kpi_df.get("costo_benchmark"), errors="coerce")
-        - pd.to_numeric(kpi_df.get("costo_evitado_usd"), errors="coerce"))
+    _pi = pd.to_numeric(kpi_df.get("costo_evitado_usd"), errors="coerce")
+    kpi_df = kpi_df.assign(   # sin horas cargadas (costo PI = 0) no hay costo evitado que mostrar
+        _costo_evitado=(pd.to_numeric(kpi_df.get("costo_benchmark"), errors="coerce") - _pi).where(_pi > 0))
     tabla({"proyecto": "Proyecto", "servicio_requerido": "Servicio Requerido",
            "costo_evitado_usd": "Costo proyecto PI", "costo_benchmark": "Costo serv. con 3ro",
            "_costo_evitado": "Costo evitado"},
@@ -147,11 +147,11 @@ with s3, st.container(border=True, key="sec_opt"):
     o1, o2 = st.columns(2, gap="small")
     with o1:
         html_(ui.metrica("FTE Total REALES", kpis.fmt_num(r["fte_impacto_real"]),
-                         f"{kpis.fmt_num(r['impacto_hrs_real'], 0)} hrs/mes" if r["impacto_hrs_real"] is not None
+                         f"{kpis.fmt_num(r['impacto_hrs_real'], 0)} horas" if r["impacto_hrs_real"] is not None
                          else None, "reloj", "morado"))
     with o2:
         html_(ui.metrica("FTE Total POTENCIALES", kpis.fmt_num(r["fte_impacto_potencial"]),
-                         f"{kpis.fmt_num(r['impacto_hrs_potencial'], 0)} hrs/mes"
+                         f"{kpis.fmt_num(r['impacto_hrs_potencial'], 0)} horas"
                          if r["impacto_hrs_potencial"] is not None else None, "rayo", "azul"))
     html_(ui.nota(f"1 FTE = {kpis.HORAS_FTE_MES} horas (equivalencia referencial)"))
     tabla({"proyecto": "Proyecto", "alcance_e2e": "Alcance E2E del proyecto",
