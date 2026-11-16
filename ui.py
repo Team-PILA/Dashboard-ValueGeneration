@@ -86,7 +86,7 @@ CSS = f"""
 .vg-tile .s{{font-size:.72rem;color:{PLOMO}}}
 
 .vg-diag{{border-radius:12px;padding:12px 18px;background:{PLOMO_CLARO};border:1px solid {BORDE};
-           display:flex;align-items:center;gap:16px;margin-bottom:14px;color:{TINTA};min-height:74px}}
+           display:flex;align-items:center;gap:16px;margin-bottom:14px;color:{TINTA};height:120px;box-sizing:border-box}}
 .vg-diag .ic{{color:{AZUL};flex:0 0 auto}}
 .vg-diag .t{{font-size:.82rem;font-weight:600;color:{PLOMO_OSC}}}
 .vg-diag .v{{font-size:2rem;font-weight:800;line-height:1.1}}
@@ -94,7 +94,7 @@ CSS = f"""
 .vg-diag .sep{{width:1px;align-self:stretch;background:{BORDE}}}
 .vg-diag .v2{{font-size:1.45rem;font-weight:800;color:{AZUL}}}
 .vg-ger{{border-radius:12px;padding:12px 16px;background:#fff;border:1px solid {BORDE};
-         display:flex;gap:12px;align-items:center;margin-bottom:14px;color:{TINTA};min-height:74px}}
+         display:flex;gap:12px;align-items:center;margin-bottom:14px;color:{TINTA};height:120px;box-sizing:border-box}}
 .vg-ger .ic{{color:{MORADO};flex:0 0 auto}}
 .vg-ger .chips{{display:flex;flex-wrap:wrap;gap:6px}}
 .vg-chip{{background:{MORADO_CLARO};color:{MORADO_OSC};border-radius:999px;padding:3px 10px;
