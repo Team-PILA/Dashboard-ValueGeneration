@@ -144,7 +144,7 @@ with der:
 # ---------------------------------------------------------------- tres secciones
 s1, s2, s3 = st.columns(3, gap="medium")
 
-with s1, st.container(key="caja_azul"):
+with s1, st.container(border=True):
     st.markdown('<p class="vg-sec">Análisis con Impacto Organizacional</p>'
                 '<p class="vg-sec-sub">[FTE vs. HC]</p>', unsafe_allow_html=True)
     f1, f2 = st.columns(2)
